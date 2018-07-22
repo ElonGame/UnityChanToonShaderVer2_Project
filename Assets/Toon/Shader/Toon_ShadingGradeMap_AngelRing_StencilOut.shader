@@ -159,6 +159,7 @@
             #pragma multi_compile _IS_TRANSCLIPPING_OFF
             #pragma multi_compile _IS_ANGELRING_ON
             #pragma multi_compile _IS_PASS_FWDBASE
+            #pragma multi_compile ___ _UTS_IS_COLOR_MIXER
             #include "UCTS_ShadingGradeMap.cginc"
 
             ENDCG
@@ -195,6 +196,7 @@
             #pragma multi_compile _IS_TRANSCLIPPING_OFF
             #pragma multi_compile _IS_ANGELRING_ON
             #pragma multi_compile _IS_PASS_FWDDELTA
+            #pragma multi_compile ___ _UTS_IS_COLOR_MIXER
             #include "UCTS_ShadingGradeMap.cginc"
 
             ENDCG

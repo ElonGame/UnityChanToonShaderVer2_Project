@@ -88,6 +88,19 @@
             
             uniform float _GI_Intensity;
 
+#ifdef _UTS_IS_COLOR_MIXER
+            uniform float4 _BaseColor_Mixer;
+            uniform float4 _1st_ShadeColor_Mixer;
+            uniform float4 _2nd_ShadeColor_Mixer;
+            uniform float4 _BaseColor_Mixer_Color;
+            uniform float4 _1st_ShadeColor_Mixer_Color;
+            uniform float4 _2nd_ShadeColor_Mixer_Color;
+
+            float4 colorMixer(float4 x, float4 y, float4 z, float4 w, float4 mixer) {
+                return (x * mixer.x) + (y * mixer.y) + (z * mixer.z) + (w * mixer.w);
+            }
+#endif // ifdef _UTS_IS_COLOR_MIXER
+
             struct VertexInput {
                 float4 vertex : POSITION;
                 float3 normal : NORMAL;
@@ -118,6 +131,39 @@
                 return o;
             }
             float4 frag(VertexOutput i) : SV_TARGET {
+                float4 colorMixer_BaseColor      = _BaseColor;
+                float4 colorMixer_1st_ShadeColor = _1st_ShadeColor;
+                float4 colorMixer_2nd_ShadeColor = _2nd_ShadeColor;
+#ifdef _UTS_IS_COLOR_MIXER
+                if(any(_BaseColor_Mixer)) {
+                    colorMixer_BaseColor = colorMixer(
+                          _BaseColor                    // x
+                        , _1st_ShadeColor               // y
+                        , _2nd_ShadeColor               // z
+                        , _BaseColor_Mixer_Color        // w
+                        , _BaseColor_Mixer              // mixer
+                    );
+                }
+                if(any(_1st_ShadeColor_Mixer)) {
+                    colorMixer_1st_ShadeColor = colorMixer(
+                          _BaseColor                    // x
+                        , _1st_ShadeColor               // y
+                        , _2nd_ShadeColor               // z
+                        , _1st_ShadeColor_Mixer_Color   // w
+                        , _1st_ShadeColor_Mixer         // mixer
+                    );
+                }
+                if(any(_2nd_ShadeColor_Mixer)) {
+                    colorMixer_2nd_ShadeColor = colorMixer(
+                          _BaseColor                    // x
+                        , _1st_ShadeColor               // y
+                        , _2nd_ShadeColor               // z
+                        , _2nd_ShadeColor_Mixer_Color   // w
+                        , _2nd_ShadeColor_Mixer         // mixer
+                    );
+                }
+#endif // ifdef _UTS_IS_COLOR_MIXER
+
                 i.normalDir = normalize(i.normalDir);
                 float3x3 tangentTransform = float3x3( i.tangentDir, i.bitangentDir, i.normalDir);
                 float3 viewDirection = normalize(_WorldSpaceCameraPos.xyz - i.posWorld.xyz);
@@ -159,11 +205,11 @@
 ////// Lighting:
                 float attenuation = LIGHT_ATTENUATION(i);
                 float3 Set_LightColor = lightColor.rgb;
-                float3 Set_BaseColor = lerp( (_BaseColor.rgb*_BaseMap_var.rgb), ((_BaseColor.rgb*_BaseMap_var.rgb)*Set_LightColor), _Is_LightColor_Base );
+                float3 Set_BaseColor = lerp( (colorMixer_BaseColor.rgb*_BaseMap_var.rgb), ((colorMixer_BaseColor.rgb*_BaseMap_var.rgb)*Set_LightColor), _Is_LightColor_Base );
                 float4 _1st_ShadeMap_var = tex2D(_1st_ShadeMap,TRANSFORM_TEX(Set_UV0, _1st_ShadeMap));
-                float3 Set_1st_ShadeColor = lerp( (_1st_ShadeColor.rgb*_1st_ShadeMap_var.rgb), ((_1st_ShadeColor.rgb*_1st_ShadeMap_var.rgb)*Set_LightColor), _Is_LightColor_1st_Shade );
+                float3 Set_1st_ShadeColor = lerp( (colorMixer_1st_ShadeColor.rgb*_1st_ShadeMap_var.rgb), ((colorMixer_1st_ShadeColor.rgb*_1st_ShadeMap_var.rgb)*Set_LightColor), _Is_LightColor_1st_Shade );
                 float4 _2nd_ShadeMap_var = tex2D(_2nd_ShadeMap,TRANSFORM_TEX(Set_UV0, _2nd_ShadeMap));
-                float3 Set_2nd_ShadeColor = lerp( (_2nd_ShadeColor.rgb*_2nd_ShadeMap_var.rgb), ((_2nd_ShadeColor.rgb*_2nd_ShadeMap_var.rgb)*Set_LightColor), _Is_LightColor_2nd_Shade );
+                float3 Set_2nd_ShadeColor = lerp( (colorMixer_2nd_ShadeColor.rgb*_2nd_ShadeMap_var.rgb), ((colorMixer_2nd_ShadeColor.rgb*_2nd_ShadeMap_var.rgb)*Set_LightColor), _Is_LightColor_2nd_Shade );
                 float _HalfLambert_var = 0.5*dot(lerp( i.normalDir, normalDirection, _Is_NormalMapToBase ),lightDirection)+0.5;
                 float4 _Set_2nd_ShadePosition_var = tex2D(_Set_2nd_ShadePosition,TRANSFORM_TEX(Set_UV0, _Set_2nd_ShadePosition));
                 float4 _Set_1st_ShadePosition_var = tex2D(_Set_1st_ShadePosition,TRANSFORM_TEX(Set_UV0, _Set_1st_ShadePosition));

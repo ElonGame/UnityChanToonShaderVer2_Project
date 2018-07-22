@@ -149,6 +149,7 @@
             //v.2.0.4
             #pragma multi_compile _IS_CLIPPING_OFF
             #pragma multi_compile _IS_PASS_FWDBASE
+            #pragma multi_compile ___ _UTS_IS_COLOR_MIXER
             #include "UCTS_DoubleShadeWithFeather.cginc"
 
             ENDCG
@@ -184,6 +185,7 @@
             //v.2.0.4
             #pragma multi_compile _IS_CLIPPING_OFF
             #pragma multi_compile _IS_PASS_FWDDELTA
+            #pragma multi_compile ___ _UTS_IS_COLOR_MIXER
             #include "UCTS_DoubleShadeWithFeather.cginc"
 
             ENDCG
